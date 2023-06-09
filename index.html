@@ -1,215 +1,250 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HTML DOM - Drag and drop table row</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="/assets/css/demo.css" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap">
     <style>
         .table {
             border: 1px solid #ccc;
             border-collapse: collapse;
         }
+
         .table th,
         .table td {
             border: 1px solid #ccc;
-        }
-        .table th,
-        .table td {
             padding: 0.5rem;
         }
+
+        .table th:first-child,
+        .table td:first-child {
+            position: sticky;
+            left: 0;
+            background-color: #f5f5f5;
+        }
+
+        .table th.ranking-column {
+            position: sticky;
+            left: 0;
+            background-color: #f5f5f5;
+        }
+
+        .table th.ranking-column::before {
+            content: attr(data-rank);
+            display: inline-block;
+            width: 1.5em;
+            text-align: center;
+        }
+
         .draggable {
             cursor: move;
             user-select: none;
         }
+
         .placeholder {
             background-color: #edf2f7;
             border: 2px dashed #cbd5e0;
         }
-        .clone-list {
-            border-top: 1px solid #ccc;
-        }
-        .clone-table {
-            border-collapse: collapse;
-            border: none;
-        }
-        .clone-table th,
-        .clone-table td {
-            border: 1px solid #ccc;
-            border-top: none;
-            padding: 0.5rem;
-        }
-        .dragging {
-            background: #fff;
-            border-top: 1px solid #ccc;
-            z-index: 999;
-        }
-        .ranking-column {
-            position: sticky;
-            left: 0;
-            background-color: #f8f8f8;
-            z-index: 99;
-        }
     </style>
 </head>
+
 <body>
-<div style="padding: 4rem 0">
-    <table id="table" class="table">
-        <thead>
-        <tr>
-            <th class="ranking-column"></th>
-            <th data-type="number">No.</th>
-            <th>First name</th>
-            <th>Last name</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <td class="ranking-column">1</td>
-            <td>1</td>
-            <td>Andrea</td>
-            <td>Ross</td>
-        </tr>
-        <tr>
-            <td class="ranking-column">2</td>
-            <td>2</td>
-            <td>Penelope</td>
-            <td>Mills</td>
-        </tr>
-        <tr>
-            <td class="ranking-column">3</td>
-            <td>3</td>
-            <td>Sarah</td>
-            <td>Grant</td>
-        </tr>
-        <tr>
-            <td class="ranking-column">4</td>
-            <td>4</td>
-            <td>Vanessa</td>
-            <td>Roberts</td>
-        </tr>
-        <tr>
-            <td class="ranking-column">5</td>
-            <td>5</td>
-            <td>Oliver</td>
-            <td>Alsop</td>
-        </tr>
-        <tr>
-            <td class="ranking-column">6</td>
-            <td>6</td>
-            <td>Jennifer</td>
-            <td>Forsyth</td>
-        </tr>
-        </tbody>
-    </table>
-</div>
+    <div style="padding: 4rem 0">
+        <table id="table" class="table">
+            <thead>
+                <tr>
+                    <th class="ranking-column" data-rank="#"></th>
+                    <th>First name</th>
+                    <th>Last name</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="draggable" data-rank="1">1</td>
+                    <td>Andrea</td>
+                    <td>Ross</td>
+                </tr>
+                <tr>
+                    <td class="draggable" data-rank="2">2</td>
+                    <td>Penelope</td>
+                    <td>Mills</td>
+                </tr>
+                <tr>
+                    <td class="draggable" data-rank="3">3</td>
+                    <td>Sarah</td>
+                    <td>Grant</td>
+                </tr>
+                <tr>
+                    <td class="draggable" data-rank="4">4</td>
+                    <td>Vanessa</td>
+                    <td>Roberts</td>
+                </tr>
+                <tr>
+                    <td class="draggable" data-rank="5">5</td>
+                    <td>Oliver</td>
+                    <td>Alsop</td>
+                </tr>
+                <tr>
+                    <td class="draggable" data-rank="6">6</td>
+                    <td>Jennifer</td>
+                    <td>Forsyth</td>
+                </tr>
+                <tr>
+                    <td class="draggable" data-rank="7">7</td>
+                    <td>Michelle</td>
+                    <td>King</td>
+                </tr>
+                <tr>
+                    <td class="draggable" data-rank="8">8</td>
+                    <td>Steven</td>
+                    <td>Kelly</td>
+                </tr>
+                <tr>
+                    <td class="draggable" data-rank="9">9</td>
+                    <td>Julian</td>
+                    <td>Ferguson</td>
+                </tr>
+                <tr>
+                    <td class="draggable" data-rank="10">10</td>
+                    <td>Chloe</td>
+                    <td>Ince</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const table = document.getElementById("table");
-        const rows = table.getElementsByTagName("tr");
-        const rankingColumn = table.getElementsByClassName("ranking-column")[0];
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const table = document.getElementById('table');
 
-        let dragSrcIndex = null;
-        let dragStartY = null;
-        let dragCurrentY = null;
-        let cloneTable = null;
+            let draggingEle;
+            let draggingRowIndex;
+            let placeholder;
+            let isDraggingStarted = false;
 
-        for (let i = 0; i < rows.length; i++) {
-            const row = rows[i];
-            row.addEventListener("mousedown", mouseDownHandler);
-        }
+            // The current position of mouse relative to the dragging element
+            let x = 0;
+            let y = 0;
 
-        function mouseDownHandler(event) {
-            if (event.target === rankingColumn) return;
-            event.preventDefault();
+            // Swap two nodes
+            const swap = function (nodeA, nodeB) {
+                const parentA = nodeA.parentNode;
+                const siblingA = nodeA.nextSibling === nodeB ? nodeA : nodeA.nextSibling;
 
-            const row = event.target.parentNode;
-            dragSrcIndex = row.rowIndex;
-            dragStartY = event.clientY;
+                // Move `nodeA` to before the `nodeB`
+                nodeB.parentNode.insertBefore(nodeA, nodeB);
 
-            document.addEventListener("mousemove", mouseMoveHandler);
-            document.addEventListener("mouseup", mouseUpHandler);
-        }
+                // Move `nodeB` to before the sibling of `nodeA`
+                parentA.insertBefore(nodeB, siblingA);
+            };
 
-        function mouseMoveHandler(event) {
-            event.preventDefault();
+            // Check if `nodeA` is above `nodeB`
+            const isAbove = function (nodeA, nodeB) {
+                // Get the bounding rectangle of nodes
+                const rectA = nodeA.getBoundingClientRect();
+                const rectB = nodeB.getBoundingClientRect();
 
-            const row = rows[dragSrcIndex];
-            const offset = event.clientY - dragStartY;
-            const currentY = dragSrcIndex + Math.round(offset / row.offsetHeight);
+                return rectA.top + rectA.height / 2 < rectB.top + rectB.height / 2;
+            };
 
-            if (currentY !== dragCurrentY) {
-                dragCurrentY = currentY;
+            const mouseDownHandler = function (e) {
+                // Get the original row
+                const originalRow = e.target.parentNode;
+                draggingRowIndex = [].slice.call(table.querySelectorAll('tr')).indexOf(originalRow);
 
-                const cloneTable = createCloneTable();
-                const placeholder = createPlaceholder(row);
+                // Determine the mouse position
+                x = e.clientX;
+                y = e.clientY;
 
-                if (currentY > dragSrcIndex) {
-                    table.insertBefore(placeholder, rows[currentY + 1]);
-                } else {
-                    table.insertBefore(placeholder, rows[currentY]);
+                // Attach the listeners to `document`
+                document.addEventListener('mousemove', mouseMoveHandler);
+                document.addEventListener('mouseup', mouseUpHandler);
+            };
+
+            const mouseMoveHandler = function (e) {
+                if (!isDraggingStarted) {
+                    isDraggingStarted = true;
+
+                    draggingEle = table.rows[draggingRowIndex];
+                    draggingEle.classList.add('dragging');
+
+                    // Let the placeholder take the height of dragging element
+                    // So the next element won't move up
+                    placeholder = document.createElement('tr');
+                    placeholder.classList.add('placeholder');
+                    draggingEle.parentNode.insertBefore(placeholder, draggingEle.nextSibling);
+                    placeholder.style.height = `${draggingEle.offsetHeight}px`;
                 }
 
-                table.style.display = "none";
-                document.body.appendChild(cloneTable);
-            }
+                // Set position for dragging element
+                draggingEle.style.position = 'absolute';
+                draggingEle.style.top = `${draggingEle.offsetTop + e.clientY - y}px`;
+                draggingEle.style.left = `${draggingEle.offsetLeft + e.clientX - x}px`;
 
-            const draggingRow = rows[dragSrcIndex];
-            draggingRow.style.transform = `translateY(${offset}px)`;
-        }
+                // Reassign the position of mouse
+                x = e.clientX;
+                y = e.clientY;
 
-        function mouseUpHandler(event) {
-            event.preventDefault();
+                // The current order
+                // prevEle
+                // draggingEle
+                // placeholder
+                // nextEle
+                const prevEle = draggingEle.previousElementSibling;
+                const nextEle = placeholder.nextElementSibling;
 
-            const row = rows[dragSrcIndex];
-            const placeholder = table.getElementsByClassName("placeholder")[0];
-            const targetIndex = placeholder ? placeholder.rowIndex : rows.length;
+                // The dragging element is above the previous element
+                // User moves the dragging element to the top
+                // We don't allow to drop above the header
+                // (which doesn't have `previousElementSibling`)
+                if (prevEle && prevEle.previousElementSibling && isAbove(draggingEle, prevEle)) {
+                    // The current order    -> The new order
+                    // prevEle              -> placeholder
+                    // draggingEle          -> draggingEle
+                    // placeholder          -> prevEle
+                    swap(placeholder, draggingEle);
+                    swap(placeholder, prevEle);
+                    return;
+                }
 
-            table.insertBefore(row, rows[targetIndex]);
+                // The dragging element is below the next element
+                // User moves the dragging element to the bottom
+                if (nextEle && isAbove(nextEle, draggingEle)) {
+                    // The current order    -> The new order
+                    // draggingEle          -> nextEle
+                    // placeholder          -> placeholder
+                    // nextEle              -> draggingEle
+                    swap(nextEle, placeholder);
+                    swap(nextEle, draggingEle);
+                }
+            };
 
-            row.style.transform = "";
-            table.style.display = "";
-            document.body.removeChild(cloneTable);
-            removePlaceholder();
+            const mouseUpHandler = function () {
+                // Remove the placeholder
+                placeholder && placeholder.parentNode.removeChild(placeholder);
 
-            document.removeEventListener("mousemove", mouseMoveHandler);
-            document.removeEventListener("mouseup", mouseUpHandler);
-        }
+                draggingEle.classList.remove('dragging');
+                draggingEle.style.removeProperty('top');
+                draggingEle.style.removeProperty('left');
+                draggingEle.style.removeProperty('position');
 
-        function createCloneTable() {
-            const cloneList = document.createElement("div");
-            cloneList.classList.add("clone-list");
+                x = 0;
+                y = 0;
+                draggingEle = null;
+                isDraggingStarted = false;
 
-            cloneTable = document.createElement("table");
-            cloneTable.classList.add("clone-table");
+                // Remove the attached listeners to `document`
+                document.removeEventListener('mousemove', mouseMoveHandler);
+                document.removeEventListener('mouseup', mouseUpHandler);
+            };
 
-            for (let i = 0; i < rows.length; i++) {
-                const row = rows[i];
-                const cloneRow = row.cloneNode(true);
-                cloneTable.appendChild(cloneRow);
-            }
-
-            cloneList.appendChild(cloneTable);
-            return cloneList;
-        }
-
-        function createPlaceholder(row) {
-            const placeholder = document.createElement("tr");
-            placeholder.classList.add("placeholder");
-            placeholder.style.height = row.offsetHeight + "px";
-            return placeholder;
-        }
-
-        function removePlaceholder() {
-            const placeholder = table.getElementsByClassName("placeholder")[0];
-            if (placeholder) {
-                placeholder.parentNode.removeChild(placeholder);
-            }
-        }
-    });
-</script>
+            // Query all draggable elements
+            [].slice.call(table.getElementsByClassName('draggable')).forEach(function (draggable) {
+                draggable.addEventListener('mousedown', mouseDownHandler);
+            });
+        });
+    </script>
 </body>
+
 </html>
